@@ -23,7 +23,7 @@ The Root Mean Square Error (RMSE) is used for evaluation of the model. As a benc
 | Algorithm | CV | Test |
 |---------- | -- | ---- |
 | Linear Regression | 1133.77 | 1202.85 | 
-| Ridge Regression |  | 1133.72 | 1203.17 |
+| Ridge Regression | 1133.72 | 1203.17 |
 | Lasso Regression | 1131.89 | 1201.80 | 
 | Decision Tree | 1093.78 | 1159.26 | 
 | **Random Forest** | 1093.48 | **1153.89** | 
