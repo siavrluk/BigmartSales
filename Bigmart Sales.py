@@ -3,7 +3,7 @@
 
 # The data scientists at BigMart have collected 2013 sales data for 1559 products across 10 stores in different cities. Also, certain attributes of each product and store have been defined. The aim is to build a predictive model and find out the sales of each product at a particular store.
 
-# In[107]:
+# In[1]:
 
 
 import pandas as pd
@@ -31,7 +31,6 @@ test = pd.read_csv('../Bigmart Sales/test.csv')
 
 
 train.shape
-test.shape
 
 
 # In[4]:
@@ -44,6 +43,12 @@ train.columns
 
 
 test.columns
+
+
+# In[6]:
+
+
+train.dtypes
 
 
 # From the data set website (https://datahack.analyticsvidhya.com/contest/practice-problem-big-mart-sales-iii/) we have the following description of the features:
@@ -64,7 +69,7 @@ test.columns
 # | Item_Outlet_Sales | Sales of the product in the particulat store. This is the outcome variable to be predicted |
 # 
 
-# In[6]:
+# In[7]:
 
 
 train.head()
@@ -72,13 +77,13 @@ train.head()
 
 # Check for missing values:
 
-# In[7]:
+# In[8]:
 
 
 train.isnull().sum(axis=0)/len(train)*100
 
 
-# In[8]:
+# In[9]:
 
 
 test.isnull().sum(axis=0)/len(test)*100
@@ -88,13 +93,13 @@ test.isnull().sum(axis=0)/len(test)*100
 
 # Look at the distributions of train and test set:
 
-# In[9]:
+# In[10]:
 
 
 train.describe()
 
 
-# In[10]:
+# In[11]:
 
 
 test.describe()
@@ -104,7 +109,7 @@ test.describe()
 
 # Both sets seem to have the same distributions of the quantitative features so we will combine them in order to do the missing values imputation.
 
-# In[11]:
+# In[12]:
 
 
 train['Src'] = 'train'
@@ -112,13 +117,13 @@ test['Src'] = 'test'
 data = pd.concat([train, test], ignore_index=True, sort = False)
 
 
-# In[12]:
+# In[13]:
 
 
 print(train.shape, test.shape, data.shape)
 
 
-# In[13]:
+# In[14]:
 
 
 data.apply(lambda x: len(x.unique()))
@@ -129,7 +134,7 @@ data.apply(lambda x: len(x.unique()))
 
 # Explore the frequency of all categorical features:
 
-# In[14]:
+# In[15]:
 
 
 cat_pred = [x for x in data.dtypes.index if data.dtypes[x] == 'object']
@@ -152,7 +157,7 @@ for col in cat_pred:
 
 # As already mentioned, the feature 'Item_Fat_Content' is no coded properly so we will correct this:
 
-# In[15]:
+# In[16]:
 
 
 data['Item_Fat_Content'] = data['Item_Fat_Content'].replace({'LF': 'Low Fat', 
@@ -162,7 +167,7 @@ data['Item_Fat_Content'] = data['Item_Fat_Content'].replace({'LF': 'Low Fat',
 
 # Now we will address the missing values of 'Item_Weight' and 'Outlet_Size'. We will impute the missing values in 'Item_Weight' with the average weight of the items in the corresponding 'Item_Type' category.
 
-# In[16]:
+# In[17]:
 
 
 data['Item_Weight'] = data.groupby('Item_Type')['Item_Weight'].transform(lambda x: x.fillna(x.mean()))
@@ -170,13 +175,13 @@ data['Item_Weight'] = data.groupby('Item_Type')['Item_Weight'].transform(lambda 
 
 # For 'Outlet_Size' we first check the type and the location of the stores:
 
-# In[17]:
+# In[18]:
 
 
 pd.crosstab( data['Outlet_Type'], data['Outlet_Size'])
 
 
-# In[18]:
+# In[19]:
 
 
 pd.crosstab( data['Outlet_Type'], data['Outlet_Location_Type'])
@@ -184,7 +189,7 @@ pd.crosstab( data['Outlet_Type'], data['Outlet_Location_Type'])
 
 # We see that all stores of type 'Supermarket Type2' and 'Supermarket Type3' are of medium size and are location is of type 'Tier 3'. Therefore, we will group them together:
 
-# In[19]:
+# In[20]:
 
 
 data['Outlet_Type'] = data['Outlet_Type'].replace({'Supermarket Type2': 'Supermarket Type2/3',
@@ -193,13 +198,13 @@ data['Outlet_Type'] = data['Outlet_Type'].replace({'Supermarket Type2': 'Superma
 
 # Now we will impute the missing values in 'Outlet_Size' by the mode of 'Outlet_Size' for the corresponding 'Outlet_Type':
 
-# In[20]:
+# In[21]:
 
 
 pd.crosstab( data['Outlet_Type'], data['Outlet_Size'])
 
 
-# In[21]:
+# In[22]:
 
 
 mode = (data.groupby('Outlet_Type', as_index=False)
@@ -207,7 +212,7 @@ mode = (data.groupby('Outlet_Type', as_index=False)
 mode
 
 
-# In[22]:
+# In[23]:
 
 
 data.loc[(data['Outlet_Type'] == 'Grocery Store') & (data['Outlet_Size'].isnull()), 'Outlet_Size'] = 'Small'
@@ -217,13 +222,13 @@ data.loc[(data['Outlet_Type'] == 'Supermarket Type2/3') & (data['Outlet_Size'].i
 
 # As already mentioned, 0's in 'Item_Visibility' seem to denote missing values. We will impute this with the average 'Item_Visibility' of the items in the corresponding 'Item_Type' category.
 
-# In[23]:
+# In[24]:
 
 
 data['Item_Visibility'].replace(0, np.nan, inplace=True)
 
 
-# In[24]:
+# In[25]:
 
 
 data['Item_Visibility'] = data.groupby('Item_Type')['Item_Visibility'].transform(lambda x: x.fillna(x.mean()))
@@ -231,7 +236,7 @@ data['Item_Visibility'] = data.groupby('Item_Type')['Item_Visibility'].transform
 
 # Now we deal with the items that are non-edible but still have fat content. As mentioned, we will try to extract information from the 'Item_Identifier' and 'Item_Type'. We note that although each item has a unique 'Item_identifier', 
 
-# In[25]:
+# In[26]:
 
 
 data.groupby('Item_Type')['Item_Identifier'].unique()
@@ -239,13 +244,13 @@ data.groupby('Item_Type')['Item_Identifier'].unique()
 
 # All 'Item_Identifier' codes start with 'FD', 'DR' or 'NC' (stand for Food, Drink, Non-consumable?). We will replace the 'Item_Fat_Content' for the non-consumable items by 'DNA' (does not apply). 
 
-# In[26]:
+# In[27]:
 
 
 data['Item_Identifier_new'] = data['Item_Identifier'].apply(lambda x: x[0:2])
 
 
-# In[27]:
+# In[28]:
 
 
 data.groupby('Item_Type')['Item_Identifier_new'].unique()
@@ -253,7 +258,7 @@ data.groupby('Item_Type')['Item_Identifier_new'].unique()
 
 # In addition, items of type 'Fruits and Vegetables', 'Hard Drinks', 'Meat', 'Seafood' will also get 'DNA' for 'Item_Fat_Content'.
 
-# In[28]:
+# In[29]:
 
 
 data.loc[data['Item_Identifier_new'] == 'NC', 'Item_Fat_Content'] = 'DNA'
@@ -262,7 +267,7 @@ data.loc[data.Item_Type.isin(['Fruits and Vegetables', 'Hard Drinks', 'Meat', 'S
 
 # From 'Outlet_Establishment_Year' we will define a new variable 'Years_Operation' which is the number of years the respective store had been operating:
 
-# In[29]:
+# In[30]:
 
 
 data['Years_Operation'] = 2013 - data['Outlet_Establishment_Year']
@@ -272,7 +277,7 @@ data['Years_Operation'] = 2013 - data['Outlet_Establishment_Year']
 
 # For building the prediction model we will use the scikit.learn library. Since it only accepts numerical values, first we need to convert all categorical variables into dummy variables. Note that since we need 'Outlet_Identifier' for the submission, we first need to define a new variable for each store and then dummify it.
 
-# In[30]:
+# In[31]:
 
 
 LE = LabelEncoder()
@@ -292,7 +297,7 @@ data_dummy = pd.get_dummies(data_dummy, columns = ['Item_Fat_Content', 'Item_Typ
 
 # The first step is to split the data set back into train and test sets:
 
-# In[31]:
+# In[32]:
 
 
 train = data.loc[data['Src'] == 'train']
@@ -306,7 +311,7 @@ test_dummy = data_dummy.loc[data_dummy['Src'] == 'test']
 
 # We create the benchmark model by predicting the sales as the average sales of product of the same 'Item_Type'.
 
-# In[32]:
+# In[33]:
 
 
 mean_per_item_type = train.groupby('Item_Type')['Item_Outlet_Sales'].mean()
@@ -320,13 +325,13 @@ subm.to_csv("benchmark.csv",index=False)
 
 # Public Leaderboard Score: 1775.33583643103
 
-# In[33]:
+# In[34]:
 
 
 test.head()
 
 
-# In[34]:
+# In[35]:
 
 
 subm.head()
@@ -334,14 +339,14 @@ subm.head()
 
 # ## Linear Regression
 
-# In[35]:
+# In[36]:
 
 
 pred = [x for x in train_dummy.columns if x not in ['Item_Outlet_Sales','Item_Identifier', 'Outlet_Identifier', 
                                                      'Outlet_Establishment_Year', 'Src', 'Item_Identifier_new']]
 
 
-# In[36]:
+# In[37]:
 
 
 lin_regr = LinearRegression(normalize=True)
@@ -349,14 +354,14 @@ lin_regr.fit(train_dummy[pred], train_dummy['Item_Outlet_Sales'])
 test_dummy['Item_Outlet_Sales'] = lin_regr.predict(test_dummy[pred])
 
 
-# In[37]:
+# In[38]:
 
 
 cv_score = np.sqrt(np.abs(cross_val_score(lin_regr, train_dummy[pred], train_dummy['Item_Outlet_Sales'], 
                 cv = 3, scoring='neg_mean_squared_error').mean()))
 
 
-# In[38]:
+# In[39]:
 
 
 subm['Item_Outlet_Sales'] = test_dummy['Item_Outlet_Sales']
@@ -367,7 +372,7 @@ subm.to_csv('LinearRegression.csv', index = False)
 # 
 # Public Leaderboard Score: 1202.84839849882
 
-# In[39]:
+# In[40]:
 
 
 coeff_lin_regr = pd.Series(lin_regr.coef_, pred).sort_values()
@@ -378,40 +383,45 @@ coeff_len_regr.plot(kind='bar', title='Model Coefficients')
 
 # ## Ridge Regression
 
-# In[40]:
+# In[55]:
 
 
-ridge_regr = Ridge(alpha=.1, normalize=True)
+ridge_regr = Ridge(alpha=.01, normalize=True)
 ridge_regr.fit(train_dummy[pred], train_dummy['Item_Outlet_Sales'])
 test_dummy['Item_Outlet_Sales'] = ridge_regr.predict(test_dummy[pred])
 
 
-# In[41]:
+# In[56]:
 
 
 cv_score = np.sqrt(np.abs(cross_val_score(ridge_regr, train_dummy[pred], train_dummy['Item_Outlet_Sales'], 
                 cv = 3, scoring='neg_mean_squared_error').mean()))
+cv_score
 
 
-# In[42]:
+# In[57]:
 
 
 coeff_ridge = pd.Series(ridge_regr.coef_, pred).sort_values()
 coeff_ridge.plot(kind='bar', title='Model Coefficients')
 
 
-# In[ ]:
+# In[58]:
 
 
 subm['Item_Outlet_Sales'] = test_dummy['Item_Outlet_Sales']
 subm.to_csv('RidgeRegression.csv', index = False)
 
 
-# Note that the coefficients now look better but even with a very little regularization parameter alpha (0.1) we still get cross-validation score of 1137.3349089796116 which is not much better than the unregularized model. 
+# Note that the coefficients now look better but even with a very small regularization parameter alpha (0.01) we still get cross-validation score of 1133.720274771747 which is not much better than the unregularized model. 
+# 
+# Cross-validation score: 1133.720274771747
+# 
+# Public Leaderboard Score: 1203.17150482659
 
 # ## Lasso Regression
 
-# In[43]:
+# In[65]:
 
 
 lasso_regr = Lasso(alpha=.1, normalize=True)
@@ -419,21 +429,21 @@ lasso_regr.fit(train_dummy[pred], train_dummy['Item_Outlet_Sales'])
 test_dummy['Item_Outlet_Sales'] = lasso_regr.predict(test_dummy[pred])
 
 
-# In[44]:
+# In[69]:
 
 
 cv_score = np.sqrt(np.abs(cross_val_score(lasso_regr, train_dummy[pred], train_dummy['Item_Outlet_Sales'], 
                 cv = 3, scoring='neg_mean_squared_error').mean()))
 
 
-# In[45]:
+# In[67]:
 
 
 coeff_lasso = pd.Series(lasso_regr.coef_, pred).sort_values()
 coeff_lasso.plot(kind='bar', title='Model Coefficients')
 
 
-# In[ ]:
+# In[68]:
 
 
 subm['Item_Outlet_Sales'] = test_dummy['Item_Outlet_Sales']
@@ -441,12 +451,16 @@ subm.to_csv('LassoRegression.csv', index = False)
 
 
 # The same happens here. Again with small alpha (0.1) we get a cross-validation score of 1131.8868997418629.
+# 
+# Cross-validation score: 1131.8868997418629
+# 
+# Public Leaderboard Score: 1201.79837015301
 
 # ## Decision Tree
 
 # It seems that the linear models don't fit the data adequately. Now we will fit a decision tree model.
 
-# In[102]:
+# In[ ]:
 
 
 dec_tree = DecisionTreeRegressor(max_depth=6, min_samples_leaf=80)
@@ -454,27 +468,27 @@ dec_tree.fit(train_dummy[pred], train_dummy['Item_Outlet_Sales'])
 test_dummy['Item_Outlet_Sales'] = dec_tree.predict(test_dummy[pred])
 
 
-# In[103]:
+# In[ ]:
 
 
 cv_score = np.sqrt(np.abs(cross_val_score(dec_tree, train_dummy[pred], train_dummy['Item_Outlet_Sales'], 
                 cv = 3, scoring='neg_mean_squared_error').mean()))
 
 
-# In[104]:
+# In[ ]:
 
 
 cv_score
 
 
-# In[105]:
+# In[ ]:
 
 
 coeff_dec_tree = pd.Series(dec_tree.feature_importances_, pred).sort_values(ascending=False)
 coeff_dec_tree.plot(kind='bar', title='Feature Importances')
 
 
-# In[106]:
+# In[ ]:
 
 
 subm['Item_Outlet_Sales'] = test_dummy['Item_Outlet_Sales']
@@ -487,7 +501,7 @@ subm.to_csv('DecisionTree.csv', index = False)
 
 # ## Random Forest
 
-# In[108]:
+# In[ ]:
 
 
 random_forest = RandomForestRegressor(n_estimators=200,max_depth=5, min_samples_leaf=100,n_jobs=4)
@@ -495,27 +509,27 @@ random_forest.fit(train_dummy[pred], train_dummy['Item_Outlet_Sales'])
 test_dummy['Item_Outlet_Sales'] = random_forest.predict(test_dummy[pred])
 
 
-# In[109]:
+# In[ ]:
 
 
 cv_score = np.sqrt(np.abs(cross_val_score(random_forest, train_dummy[pred], train_dummy['Item_Outlet_Sales'], 
                 cv = 3, scoring='neg_mean_squared_error').mean()))
 
 
-# In[110]:
+# In[ ]:
 
 
 cv_score
 
 
-# In[111]:
+# In[ ]:
 
 
 coeff_random_forest = pd.Series(random_forest.feature_importances_, pred).sort_values(ascending=False)
 coeff_random_forest.plot(kind='bar', title='Feature Importances')
 
 
-# In[112]:
+# In[ ]:
 
 
 subm['Item_Outlet_Sales'] = test_dummy['Item_Outlet_Sales']
@@ -528,7 +542,7 @@ subm.to_csv('RandomForest.csv', index = False)
 
 # ## XGB
 
-# In[225]:
+# In[ ]:
 
 
 import xgboost as xgb
@@ -538,27 +552,27 @@ xgb.fit(train_dummy[pred], train_dummy['Item_Outlet_Sales'])
 test_dummy['Item_Outlet_Sales'] = xgb.predict(test_dummy[pred])
 
 
-# In[226]:
+# In[ ]:
 
 
 cv_score = np.sqrt(np.abs(cross_val_score(xgb, train_dummy[pred], train_dummy['Item_Outlet_Sales'], 
                 cv = 3, scoring='neg_mean_squared_error').mean()))
 
 
-# In[227]:
+# In[ ]:
 
 
 cv_score
 
 
-# In[228]:
+# In[ ]:
 
 
 coeff_xgb = pd.Series(xgb.feature_importances_, pred).sort_values(ascending=False)
 coeff_xgb.plot(kind='bar', title='Feature Importances')
 
 
-# In[229]:
+# In[ ]:
 
 
 subm['Item_Outlet_Sales'] = test_dummy['Item_Outlet_Sales']
